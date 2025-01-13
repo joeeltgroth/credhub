@@ -1,12 +1,13 @@
 package org.cloudfoundry.credhub.auth
 
+//import org.springframework.security.jwt.JwtHelper
+import com.nimbusds.jwt.JWTParser
 import org.cloudfoundry.credhub.ErrorMessages
 import org.cloudfoundry.credhub.exceptions.AccessTokenExpiredException
 import org.cloudfoundry.credhub.util.CurrentTimeProvider
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.security.core.AuthenticationException
-import org.springframework.security.jwt.JwtHelper
 import org.springframework.security.jwt.crypto.sign.InvalidSignatureException
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException
 import org.springframework.security.oauth2.common.exceptions.OAuth2Exception

@@ -102,7 +102,7 @@ For convenience, the CredHub team runs a public UAA whose IP is in the default `
 #### Running CredHub with local UAA
 
 In order to run CredHub against a UAA running on your local machine, do the following:
-1. Start a UAA with Docker: `docker run -d --mount type=bind,source=$PWD/config/uaa.yml,target=/uaa/uaa.yml -p 127.0.0.1:8080:8080 pcfseceng/uaa:latest`
+1. Start a UAA with Docker: `docker run -d -v $(PWD)/config/uaa.yml:/uaa/uaa.yml -p 127.0.0.1:8080:8080 pcfseceng/uaa:latest`. Also may need to add the config/uaa.yml path to the Docker Settings-Resources-FileSharing permissions. 
 1. Start CredHub server pointing at the local UAA: `./scripts/start_server.sh -Dspring.profiles.active=dev,dev-h2,dev-local-uaa`
 
 For testing purposes, the local UAA bootstraps a user (username: `credhub`/ password: `password`) and a client (client ID:`credhub_client` / client secret:`secret`), with which you can access the local CredHub. For example:
@@ -219,13 +219,14 @@ build/credhub login -s https://localhost:9000 --client-name=credhub_client --cli
 
 First, be sure to pull and compile the [credhub-cli](https://github.com/cloudfoundry-incubator/credhub-cli), as described above.
 
-Make sure your development server is running. When it starts up for the first time, it will create a server CA and server certificate for SSL, as well as a trusted client CA for testing mutual TLS authentication. These will be located in `src/test/resources` relative to the `credhub` repository.
+Make sure your development server is running. When it starts up for the first time, it will create a server CA and server certificate for SSL, as well as a trusted client CA for testing mutual TLS authentication. These will be located in `applications/credhub-api/src/test/resources` relative to the `credhub` repository.
 
 Pull [credhub-acceptance-tests](https://github.com/cloudfoundry-incubator/credhub-acceptance-tests) and run:
 
 ```shell
-CREDENTIAL_ROOT=/path/to/credhub/repo/plus/src/test/resources ./scripts/run_tests.sh
+CREDENTIAL_ROOT=/path/to/credhub/repo/plus/applications/credhub-api/src/test/resources ./scripts/run_tests_h2.sh
 ```
+Look at '/scripts/run_tests*' for testing against various flavors of local databases. 
 
 Assuming it works, that will generate some test client certificates for testing mutual TLS (in `certs/` in the acceptance test directory) and run the acceptance test suite against your locally running credhub server.
 
