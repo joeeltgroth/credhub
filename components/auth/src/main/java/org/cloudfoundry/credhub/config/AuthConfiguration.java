@@ -1,5 +1,7 @@
 package org.cloudfoundry.credhub.config;
 
+import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.jwk.RSAKey;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.cloudfoundry.credhub.auth.ActuatorPortFilter;
@@ -25,6 +27,9 @@ import org.springframework.security.web.authentication.preauth.PreAuthenticatedA
 import org.springframework.security.web.authentication.preauth.x509.X509AuthenticationFilter;
 
 import java.net.URISyntaxException;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.interfaces.RSAPublicKey;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
@@ -33,7 +38,10 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @EnableWebSecurity
 public class AuthConfiguration {
     private static final String VALID_MTLS_ID = "\\bOU=(app:[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[a-f0-9]{4}-[a-f0-9]{12})\\b";
-    private static final Logger LOGGER = LogManager.getLogger(AuthConfiguration.class);
+    private static final Logger LOGGER = LogManager.getLogger(AuthConfiguration.class.getName());
+
+    @Value("${security.oauth2.resource.jwt.key_value}")
+    RSAPublicKey publicKey;
 
     @Autowired
     OAuthProperties oAuthProperties;
@@ -49,16 +57,17 @@ public class AuthConfiguration {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .x509()
-                .subjectPrincipalRegex(VALID_MTLS_ID)
-                .userDetailsService(mtlsSUserDetailsService());
-
-        http
-                .addFilterBefore(actuatorPortFilter, X509AuthenticationFilter.class)
-                .addFilterAfter(preAuthenticationFailureFilter, X509AuthenticationFilter.class)
-                .addFilterAfter(oAuth2ExtraValidationFilter, PreAuthenticationFailureFilter.class)
-                .authenticationProvider(preAuthenticatedAuthenticationProvider());
+        LOGGER.info("in securityFilterChain config");
+//        http
+//                .x509()
+//                .subjectPrincipalRegex(VALID_MTLS_ID)
+//                .userDetailsService(mtlsSUserDetailsService());
+//
+//        http
+//                .addFilterBefore(actuatorPortFilter, X509AuthenticationFilter.class)
+//                .addFilterAfter(preAuthenticationFailureFilter, X509AuthenticationFilter.class)
+//                .addFilterAfter(oAuth2ExtraValidationFilter, PreAuthenticationFailureFilter.class)
+//                .authenticationProvider(preAuthenticatedAuthenticationProvider());
 
         http
                 .authorizeHttpRequests((authorize) -> authorize
@@ -77,15 +86,19 @@ public class AuthConfiguration {
     }
 
     @Bean
-    JwtDecoder jwtDecoder() {
-        String jwkKeysPath = "/token_keys";
-        try {
-            jwkKeysPath = oAuthProperties.getJwkKeysPath();
-        } catch (URISyntaxException ex) {
-            LOGGER.warn("Using default jwkKeysPath: {}", jwkKeysPath);
-        }
+    JwtDecoder jwtDecoder() throws Exception {
+        LOGGER.info("in jwtDecoder");
+        return NimbusJwtDecoder.withPublicKey(publicKey).build();
 
-        return NimbusJwtDecoder.withJwkSetUri(jwkKeysPath).build();
+// TODO: The code we want to use for UAA providing the public key
+//        String jwkKeysPath = "/token_keys";
+//        try {
+//            jwkKeysPath = oAuthProperties.getJwkKeysPath();
+//        } catch (URISyntaxException ex) {
+//            LOGGER.warn("Using default jwkKeysPath: {}", jwkKeysPath);
+//        }
+//
+//        return NimbusJwtDecoder.withJwkSetUri(jwkKeysPath).build();
     }
 
     private UserDetailsService mtlsSUserDetailsService() {
