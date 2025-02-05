@@ -52,9 +52,18 @@ spring:
 logging:
   level:
     org:
-      hibernate:
-        SQL: DEBUG
-        type:
-          descriptor:
-            sql:
-              BasicBinder: TRACE
+      hibernate: ERROR
+#        SQL: INFO
+#        type:
+#          descriptor:
+#            sql:
+#              BasicBinder: INFO
+      springframework:
+        security: TRACE
+      cloudfoundry:
+        credhub: TRACE
+      flyway: ERROR
+      flywaydb: ERROR
+    com:
+      zaxxer:
+        hikari: ERROR
