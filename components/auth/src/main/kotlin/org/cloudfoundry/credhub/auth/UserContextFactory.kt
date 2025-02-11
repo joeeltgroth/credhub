@@ -36,13 +36,13 @@ class UserContextFactory {
         val jwt: Jwt = authentication.principal as Jwt
         val claims = jwt.claims
         val grantType = claims["grant_type"] as String
-        var clientId = claims["client_id"] as String
-        var userId = claims["user_id"] as String?
-        var userName = claims["user_name"] as String?
-        var issuer = claims["iss"] as String?
-        var validFrom: Long = 0
-        var validUntil: Long = 0
-        var scopes = claims["scope"] as List<String>
+        val clientId = claims["client_id"] as String
+        val userId = claims["user_id"] as String?
+        val userName = claims["user_name"] as String?
+        val issuer = claims["iss"] as String?
+        val validFrom: Long = 0
+        val validUntil: Long = 0
+        val scopes = claims["scope"] as List<*>
         val scope = scopes.joinToString(",")
 
         // TODO: Will other tests fail without the below?

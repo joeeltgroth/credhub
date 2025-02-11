@@ -1,7 +1,5 @@
 package org.cloudfoundry.credhub.config;
 
-import com.nimbusds.jose.jwk.JWKSet;
-import com.nimbusds.jose.jwk.RSAKey;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.cloudfoundry.credhub.auth.ActuatorPortFilter;
@@ -15,20 +13,18 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.authority.AuthorityUtils;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
 import org.springframework.security.web.authentication.preauth.x509.X509AuthenticationFilter;
 
-import java.net.URISyntaxException;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
 import java.security.interfaces.RSAPublicKey;
 
 import static org.springframework.security.config.Customizer.withDefaults;
@@ -57,30 +53,31 @@ public class AuthConfiguration {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        LOGGER.info("in securityFilterChain config");
-//        http
-//                .x509()
-//                .subjectPrincipalRegex(VALID_MTLS_ID)
-//                .userDetailsService(mtlsSUserDetailsService());
-//
-//        http
-//                .addFilterBefore(actuatorPortFilter, X509AuthenticationFilter.class)
-//                .addFilterAfter(preAuthenticationFailureFilter, X509AuthenticationFilter.class)
-//                .addFilterAfter(oAuth2ExtraValidationFilter, PreAuthenticationFailureFilter.class)
-//                .authenticationProvider(preAuthenticatedAuthenticationProvider());
+         LOGGER.info("in securityFilterChain config");
+
+        http
+                .x509()
+                .subjectPrincipalRegex(VALID_MTLS_ID)
+                .userDetailsService(mtlsSUserDetailsService());
+
+        http
+                .addFilterBefore(actuatorPortFilter, X509AuthenticationFilter.class)
+                .addFilterAfter(preAuthenticationFailureFilter, X509AuthenticationFilter.class)
+                .addFilterAfter(oAuth2ExtraValidationFilter, PreAuthenticationFailureFilter.class)
+                .authenticationProvider(preAuthenticatedAuthenticationProvider());
 
         http
                 .authorizeHttpRequests((authorize) -> authorize
                         .requestMatchers(HttpMethod.GET, "/info").permitAll()
                         .requestMatchers(HttpMethod.GET, "/docs/index.html").permitAll()
                         .requestMatchers(HttpMethod.GET, "/health").permitAll()
-                        .requestMatchers( HttpMethod.GET,"/management").permitAll()
-                        .requestMatchers( HttpMethod.POST,"/management").permitAll()
-
-                        .requestMatchers("**").permitAll()
-                        .anyRequest().authenticated()
+                        .requestMatchers("/**").authenticated()
+                        .requestMatchers( HttpMethod.POST,"/api/v1/data/**").hasAuthority("SCOPE_credhub.read")
                 )
-                .oauth2ResourceServer((oauth2) -> oauth2.jwt(withDefaults()));
+                .oauth2ResourceServer((oauth2) -> oauth2.jwt(withDefaults()))
+                .httpBasic().disable()
+                .csrf().disable()
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 
         return http.build();
     }

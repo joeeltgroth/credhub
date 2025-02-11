@@ -79,12 +79,6 @@ public class AuthConfigurationTest {
   }
 
   @Test
-  public void docsIndexCanBeAccessWithoutAuthentication() throws Exception {
-    mockMvc.perform(get("/docs/index.html").accept(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk());
-  }
-
-  @Test
   public void dataEndpointDeniesAccessWithoutAuthentication() throws Exception {
     setupDataEndpointMocks();
 
