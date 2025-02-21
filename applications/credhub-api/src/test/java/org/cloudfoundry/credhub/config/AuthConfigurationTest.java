@@ -3,6 +3,7 @@ package org.cloudfoundry.credhub.config;
 import java.time.Instant;
 import java.util.UUID;
 
+import org.cloudfoundry.credhub.auth.OAuth2IssuerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -54,6 +55,9 @@ public class AuthConfigurationTest {
   @MockBean
   private DefaultCredentialVersionDataService credentialVersionDataService;
 
+//  @MockBean
+//  private OAuth2IssuerService issuerService;
+
   private MockMvc mockMvc;
 
   @Before
@@ -92,6 +96,8 @@ public class AuthConfigurationTest {
   @Test
   public void dataEndpoint_withAnAcceptedToken_allowsAccess() throws Exception {
     setupDataEndpointMocks();
+
+//    when(issuerService.getIssuer()).thenReturn("https://example.com:8443/uaa/oauth/token");
 
     final MockHttpServletRequestBuilder post = post(dataApiPath)
       .header("Authorization", "Bearer " + ALL_PERMISSIONS_TOKEN)
